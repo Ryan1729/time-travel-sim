@@ -1,3 +1,8 @@
+/// A colur represented as a byte for each of Alpha, Red, Green, and Blue.
+/// Alpha is the most significant byte, blue is the least:
+/// `0xaarrggbb`
+pub type ARGB = u32;
+
 pub mod unscaled {
     ///! Values are in pixels.
 

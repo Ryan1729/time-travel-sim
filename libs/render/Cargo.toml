@@ -8,6 +8,9 @@ path = "src/render.rs"
 
 [dependencies]
 
+[dependencies.assets]
+path = "../assets"
+
 [dependencies.platform_types]
 path = "../platform_types"
 
