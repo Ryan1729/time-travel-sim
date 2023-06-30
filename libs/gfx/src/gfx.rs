@@ -1,6 +1,6 @@
 use models::{Card, Rank, Suit, get_rank, get_suit, suits};
 
-use platform_types::{Command, Kind, PaletteIndex, FONT_WIDTH, unscaled::{self, Rect}};
+use platform_types::{ARGB, Command, PALETTE, sprite, unscaled, command::{self, Rect}, PaletteIndex, FONT_WIDTH};
 
 #[derive(Default)]
 pub struct Commands {
@@ -18,28 +18,29 @@ impl Commands {
 
     pub fn sspr(
         &mut self,
-        sprite_x: u8,
-        sprite_y: u8,
-        rect: unscaled::Rect,
+        sprite_xy: sprite::XY,
+        rect: command::Rect,
     ) {
         self.commands.push(
             Command {
-                kind: Kind::Gfx((sprite_x, sprite_y)),
+                sprite_xy,
                 rect,
+                colour_override: 0,
             }
         );
     }
 
     fn print_char_raw(
         &mut self,
-        sprite_xy: (u8, u8),
+        sprite_xy: sprite::XY,
         colour: PaletteIndex,
-        rect: unscaled::Rect,
+        rect: command::Rect,
     ) {
         self.commands.push(
             Command {
-                kind: Kind::Font(sprite_xy, colour),
+                sprite_xy,
                 rect,
+                colour_override: PALETTE[colour as usize],
             }
         );
     }
@@ -47,13 +48,14 @@ impl Commands {
     pub fn clear_to(&mut self, colour: PaletteIndex) {
         self.commands.push(
             Command {
-                kind: Kind::Colour(colour),
-                rect: Rect {
+                sprite_xy: <_>::default(),
+                rect: Rect::from_unscaled(unscaled::Rect {
                     x: unscaled::X(0),
                     y: unscaled::Y(0),
-                    w: unscaled::W(unscaled::WIDTH),
-                    h: unscaled::H(unscaled::HEIGHT),
-                },
+                    w: unscaled::W(command::WIDTH),
+                    h: unscaled::H(command::HEIGHT),
+                }),
+                colour_override: PALETTE[colour as usize],
             }
         );
     }
@@ -67,14 +69,17 @@ impl Commands {
     ) {
         let (sprite_x, sprite_y) = get_char_xy(character);
         self.print_char_raw(
-            (sprite_x, sprite_y),
+            sprite::XY {
+                x: sprite::X(sprite_x as _),
+                y: sprite::Y(sprite_y as _),
+            },
             colour,
-            Rect {
+            Rect::from_unscaled(unscaled::Rect {
                 x,
                 y,
                 w: CHAR_W,
                 h: CHAR_H,
-            }
+            }),
         );
     }
 
@@ -85,14 +90,16 @@ impl Commands {
         y: unscaled::Y
     ) {
         self.sspr(
-            card::FRONT_SPRITE_X,
-            card::FRONT_SPRITE_Y,
-            Rect {
+            sprite::XY {
+                x: sprite::X(card::FRONT_SPRITE_X as _),
+                y: sprite::Y(card::FRONT_SPRITE_Y as _),
+            },
+            Rect::from_unscaled(unscaled::Rect {
                 x,
                 y,
                 w: card::WIDTH,
                 h: card::HEIGHT,
-            }
+            })
         );
 
         let (colour, suit_char) = get_suit_colour_and_char(get_suit(card));

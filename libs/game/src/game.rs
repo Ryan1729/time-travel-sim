@@ -1,5 +1,5 @@
 use models::{Card, gen_card};
-use platform_types::unscaled;
+use platform_types::{command, unscaled};
 use xs::{Xs, Seed};
 
 #[derive(Clone, Default)]
@@ -29,8 +29,8 @@ impl State {
         let rng = &mut self.rng;
 
         let kind: Card = gen_card(rng);
-        let x = unscaled::X::gen(rng);
-        let y = unscaled::Y::gen(rng);
+        let x = unscaled::X(xs::range(rng, 0..command::WIDTH as u32) as command::Inner);
+        let y = unscaled::Y(xs::range(rng, 0..command::HEIGHT as u32) as command::Inner);
 
         self.splats.push(Splat {
             kind,
