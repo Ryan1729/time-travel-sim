@@ -43,6 +43,9 @@ pub const PALETTE: [u32; 8] = [
     all instances of `index`, leaving just the indices. Format further as needed.
 */
 
+// TODO convert this to
+// pub const GFX: [ARGB; GFX_LENGTH] = include!("gfx.in");
+// because `render` assumes that this is floats, not paletted bytes
 #[rustfmt::skip]
 pub const GFX: [u8; GFX_LENGTH] = [
 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,

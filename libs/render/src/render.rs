@@ -1033,8 +1033,11 @@ pub fn render(
     // https://rxi.github.io/cached_software_rendering.html
     // But, a single cell turned out to be the most performant,
     // in this particular case, so the code was simplifed with
-    // that in mind. Maybe it faster to have a single cell, just
+    // that in mind. Maybe it's faster to have a single cell, just
     // because the rendered size is so small. Not sure.
+
+    dbg!(commands);
+    println!("=========");
 
     frame_buffer.cells.reset_then_hash_commands(
         commands,
