@@ -73,8 +73,6 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    commands.clear_to(1 /* green */);
-
     for &Splat { kind, x, y } in &state.splats {
         commands.draw_card(kind, x, y);
     }

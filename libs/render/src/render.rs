@@ -1036,9 +1036,6 @@ pub fn render(
     // that in mind. Maybe it's faster to have a single cell, just
     // because the rendered size is so small. Not sure.
 
-    dbg!(commands);
-    println!("=========");
-
     frame_buffer.cells.reset_then_hash_commands(
         commands,
         (frame_buffer.width, frame_buffer.height),
@@ -1134,7 +1131,13 @@ pub fn render(
                 let base_src_i =
                     (sprite_y + y_iter_count) * src_w
                     + (sprite_x + x_iter_count);
-
+                debug_assert!(
+                    base_src_i < GFX.len(), 
+                    "({sprite_y} + {y_iter_count}) * {src_w} + ({sprite_x} + {x_iter_count})
+{base_src_i} >= {}
+({x_min} to {x_end}, {y_min} to {y_end})",
+                    GFX.len()
+                );
                 let gfx_colours = unsafe {
                     wide::load!(
                         GFX.as_ptr(),

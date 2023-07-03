@@ -45,21 +45,6 @@ impl Commands {
         );
     }
 
-    pub fn clear_to(&mut self, colour: PaletteIndex) {
-        self.commands.push(
-            Command {
-                sprite_xy: <_>::default(),
-                rect: Rect::from_unscaled(unscaled::Rect {
-                    x: unscaled::X(0),
-                    y: unscaled::Y(0),
-                    w: unscaled::W(command::WIDTH),
-                    h: unscaled::H(command::HEIGHT),
-                }),
-                colour_override: PALETTE[colour as usize],
-            }
-        );
-    }
-
     pub fn print_char(
         &mut self,
         character: u8, 
