@@ -531,9 +531,10 @@ pub mod unscaled {
 }
 
 pub const GFX_WIDTH: usize = 128;
-pub const GFX_HEIGHT: usize = 128;
+pub const GFX_HEIGHT: usize = 256;
 pub const GFX_LENGTH: usize = GFX_WIDTH * GFX_HEIGHT;
 
+pub const FONT_BASE_Y: u8 = 128;
 pub const FONT_WIDTH: usize = 128;
 pub const FONT_HEIGHT: usize = 128;
 pub const FONT_LENGTH: usize = FONT_WIDTH * FONT_HEIGHT;

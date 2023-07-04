@@ -1,6 +1,6 @@
 use models::{Card, Rank, Suit, get_rank, get_suit, suits};
 
-use platform_types::{ARGB, Command, PALETTE, sprite, unscaled, command::{self, Rect}, PaletteIndex, FONT_WIDTH};
+use platform_types::{ARGB, Command, PALETTE, sprite, unscaled, command::{self, Rect}, PaletteIndex, FONT_BASE_Y, FONT_WIDTH};
 
 #[derive(Default)]
 pub struct Commands {
@@ -30,21 +30,6 @@ impl Commands {
         );
     }
 
-    fn print_char_raw(
-        &mut self,
-        sprite_xy: sprite::XY,
-        colour: PaletteIndex,
-        rect: command::Rect,
-    ) {
-        self.commands.push(
-            Command {
-                sprite_xy,
-                rect,
-                colour_override: PALETTE[colour as usize],
-            }
-        );
-    }
-
     pub fn print_char(
         &mut self,
         character: u8, 
@@ -52,19 +37,35 @@ impl Commands {
         y: unscaled::Y,
         colour: PaletteIndex
     ) {
-        let (sprite_x, sprite_y) = get_char_xy(character);
-        self.print_char_raw(
+        fn get_char_xy(sprite_number: u8) -> sprite::XY {
+            type Inner = sprite::Inner;
+            let sprite_number = Inner::from(sprite_number);
+            const CH_SIZE: Inner = CHAR_SIZE as Inner;
+            const SPRITES_PER_ROW: Inner = FONT_WIDTH as Inner / CH_SIZE;
+        
             sprite::XY {
-                x: sprite::X(sprite_x as _),
-                y: sprite::Y(sprite_y as _),
-            },
-            colour,
-            Rect::from_unscaled(unscaled::Rect {
-                x,
-                y,
-                w: CHAR_W,
-                h: CHAR_H,
-            }),
+                x: sprite::X(
+                    (sprite_number % SPRITES_PER_ROW) * CH_SIZE
+                ),
+                y: sprite::Y(
+                    FONT_BASE_Y as Inner + 
+                    (sprite_number / SPRITES_PER_ROW) * CH_SIZE
+                ),
+            }
+        }
+
+        let sprite_xy = get_char_xy(character);
+        self.commands.push(
+            Command {
+                sprite_xy,
+                rect: Rect::from_unscaled(unscaled::Rect {
+                    x,
+                    y,
+                    w: CHAR_W,
+                    h: CHAR_H,
+                }),
+                colour_override: PALETTE[colour as usize],
+            }
         );
     }
 
@@ -117,15 +118,6 @@ impl Commands {
             colour,
         );
     }
-}
-
-pub fn get_char_xy(sprite_number: u8) -> (u8, u8) {
-    const SPRITES_PER_ROW: u8 = FONT_WIDTH as u8 / CHAR_SIZE;
-
-    (
-        (sprite_number % SPRITES_PER_ROW) * CHAR_SIZE,
-        (sprite_number / SPRITES_PER_ROW) * CHAR_SIZE,
-    )
 }
 
 pub mod card {
