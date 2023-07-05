@@ -152,8 +152,8 @@ mod wasm {
         // browser will stretch it for us.
         let size = winit::dpi::Size::Physical(
             winit::dpi::PhysicalSize::new(
-                unscaled::WIDTH.into(),
-                unscaled::HEIGHT.into(),
+                platform_types::command::WIDTH.into(),
+                platform_types::command::HEIGHT.into(),
             ),
         );
 
