@@ -1,6 +1,6 @@
 use models::{Card, Rank, Suit, get_rank, get_suit, suits};
 
-use platform_types::{ARGB, Command, PALETTE, sprite, unscaled, command::{self, Rect}, PaletteIndex, FONT_BASE_Y, FONT_WIDTH};
+use platform_types::{ARGB, Command, PALETTE, sprite, unscaled::{self, H, W}, command::{self, Rect}, PaletteIndex, FONT_BASE_Y, FONT_WIDTH};
 
 #[derive(Default)]
 pub struct Commands {
@@ -69,53 +69,26 @@ impl Commands {
         );
     }
 
-    pub fn draw_card(
+    pub fn draw_pixel(
         &mut self,
-        card: Card,
         x: unscaled::X,
-        y: unscaled::Y
+        y: unscaled::Y,
+        colour: PaletteIndex,
     ) {
-        self.sspr(
-            sprite::XY {
-                x: sprite::X(card::FRONT_SPRITE_X as _),
-                y: sprite::Y(card::FRONT_SPRITE_Y as _),
-            },
-            Rect::from_unscaled(unscaled::Rect {
-                x,
-                y,
-                w: card::WIDTH,
-                h: card::HEIGHT,
-            })
-        );
-
-        let (colour, suit_char) = get_suit_colour_and_char(get_suit(card));
-
-        let rank_char = get_rank_char(card);
-
-        self.print_char(
-            rank_char,
-            x + card::LEFT_RANK_EDGE_W,
-            y + card::LEFT_RANK_EDGE_H,
-            colour,
-        );
-        self.print_char(
-            suit_char,
-            x + card::LEFT_SUIT_EDGE_W,
-            y + card::LEFT_SUIT_EDGE_H,
-            colour,
-        );
-
-        self.print_char(
-            rank_char | FONT_FLIP,
-            x + card::RIGHT_RANK_EDGE_W,
-            y + card::RIGHT_RANK_EDGE_H,
-            colour,
-        );
-        self.print_char(
-            suit_char | FONT_FLIP,
-            x + card::RIGHT_SUIT_EDGE_W,
-            y + card::RIGHT_SUIT_EDGE_H,
-            colour,
+        self.commands.push(
+            Command {
+                sprite_xy: sprite::XY {
+                    x: sprite::X(card::FRONT_SPRITE_X as _),
+                    y: sprite::Y(card::FRONT_SPRITE_Y as _),
+                },
+                rect: Rect::from_unscaled(unscaled::Rect {
+                    x,
+                    y,
+                    w: W(1),
+                    h: H(1),
+                }),
+                colour_override: PALETTE[colour as usize],
+            }
         );
     }
 }

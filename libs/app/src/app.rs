@@ -67,27 +67,13 @@ impl platform_types::State for State {
 fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
     if input.gamepad != <_>::default() {
         state.add_splat();
-        speaker.request_sfx(SFX::CardPlace);
     }
 }
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    for &Splat { kind, x, y } in &state.splats {
-        commands.draw_card(kind, x, y);
-
-        commands.sspr(
-            sprite::XY {
-                x: sprite::X(0),
-                y: sprite::Y(64),
-            },
-            command::Rect::from_unscaled(unscaled::Rect {
-                x: x.saturating_sub(unscaled::W(16)),
-                y: y.saturating_sub(unscaled::H(16)),
-                w: unscaled::W(16),
-                h: unscaled::H(16),
-            })
-        );
+    for &Splat { x, y } in &state.splats {
+        commands.draw_pixel(x, y, 6);
     }
 }
 

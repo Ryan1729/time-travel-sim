@@ -1,8 +1,6 @@
 # time-travel-sim
 
-This is a template, designed to make using a particular method of cross-platform (desktop and web) development, in a new project, faster.
-
-See below for build/run instructions, and see the `checklist` script for how to get started modifying a copy of the template to suit your needs.
+This is a (currently incomplete) very simple time-travel simulation that abstracts away everything but the time-travel.
 
 ## WASM version
 

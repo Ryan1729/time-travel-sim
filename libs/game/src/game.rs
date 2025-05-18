@@ -4,7 +4,6 @@ use xs::{Xs, Seed};
 
 #[derive(Clone, Default)]
 pub struct Splat {
-    pub kind: Card,
     pub x: unscaled::X,
     pub y: unscaled::Y,
 }
@@ -28,12 +27,10 @@ impl State {
     pub fn add_splat(&mut self) {
         let rng = &mut self.rng;
 
-        let kind: Card = gen_card(rng);
         let x = unscaled::X(xs::range(rng, 0..command::WIDTH as u32) as command::Inner);
         let y = unscaled::Y(xs::range(rng, 0..command::HEIGHT as u32) as command::Inner);
 
         self.splats.push(Splat {
-            kind,
             x,
             y,
         });
