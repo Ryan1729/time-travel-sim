@@ -1,13 +1,11 @@
 [workspace]
 members = [
-    "rename-me",
+    "time-travel-sim",
     "run-wasm"
 ]
 
-# We aim for fast to compile, with the dev profile. At this time, `opt-level = 2`
-# seems to help with that goal.
 [profile.dev]
-opt-level = 3
+opt-level = 0
 debug = false
 rpath = false
 lto = false
