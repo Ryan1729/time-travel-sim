@@ -65,16 +65,22 @@ impl platform_types::State for State {
 }
 
 fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
-    if input.gamepad != <_>::default() {
-        state.add_splat();
+    if input.pressed_this_frame(Button::UP) {
+        state.move_up();
+    } else if input.pressed_this_frame(Button::DOWN) {
+        state.move_down();
+    } else if input.pressed_this_frame(Button::LEFT) {
+        state.move_left();
+    } else if input.pressed_this_frame(Button::RIGHT) {
+        state.move_right();
     }
 }
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    for &Splat { x, y } in &state.splats {
-        commands.draw_pixel(x, y, 6);
-    }
+    // TODO draw box around bounds, and translate box to lower part of screen
+    let &Splat { x, y, .. } = &state.player;
+    commands.draw_pixel(x.get(), y.get(), 6);
 }
 
 #[inline]
