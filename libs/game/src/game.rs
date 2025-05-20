@@ -83,8 +83,15 @@ pub struct Splat {
 }
 
 #[derive(Clone, Default)]
+struct Instant {
+    pub splats: Vec<Splat>,
+}
+
+#[derive(Clone, Default)]
 pub struct State {
     pub rng: Xs,
+    pub instants: Vec<Instant>,
+    pub instant_index: usize,
     pub player: Splat,
 }
 
@@ -93,7 +100,7 @@ impl State {
         let mut rng = xs::from_seed(seed);
 
         let x = xy::x(xs::range(&mut rng, 0..xy::X_MAX_INNER as u32) as xy::Inner);
-        let y = xy::y(xs::range(&mut rng, 0..xy::X_MAX_INNER as u32) as xy::Inner);
+        let y = xy::y(xs::range(&mut rng, 0..xy::Y_MAX_INNER as u32) as xy::Inner);
 
         State {
             rng,

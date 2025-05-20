@@ -91,6 +91,63 @@ impl Commands {
             }
         );
     }
+
+    pub fn draw_box(
+        &mut self,
+        rect: unscaled::Rect,
+        colour: PaletteIndex,
+    ) {
+        // TODO? Optimize this into fewer commands? Maybe a nine slice?
+
+        let left_x = rect.x;
+        let right_x = rect.x + rect.w;
+        let top_y = rect.y;
+        let bottom_y = rect.y + rect.h;
+
+        // Top row
+        {
+            let mut x = left_x;
+            let upper_bound = right_x;
+
+            while x < upper_bound {
+                self.draw_pixel(x, top_y, colour);
+                x += unscaled::W(1);
+            }
+        }
+
+        // Left column
+        {
+            let mut y = top_y;
+            let upper_bound = bottom_y;
+
+            while y < upper_bound {
+                self.draw_pixel(left_x, y, colour);
+                y += unscaled::H(1);
+            }
+        }
+
+        // Right column
+        {
+            let mut y = top_y;
+            let upper_bound = bottom_y;
+
+            while y < upper_bound {
+                self.draw_pixel(right_x, y, colour);
+                y += unscaled::H(1);
+            }
+        }
+
+        // Bottom row
+        {
+            let mut x = left_x;
+            let upper_bound = right_x;
+
+            while x < upper_bound {
+                self.draw_pixel(x, bottom_y, colour);
+                x += unscaled::W(1);
+            }
+        }
+    }
 }
 
 pub mod card {

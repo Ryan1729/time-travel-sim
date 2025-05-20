@@ -74,11 +74,23 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
     } else if input.pressed_this_frame(Button::RIGHT) {
         state.move_right();
     }
+//
+    //state.advance_time();
 }
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    // TODO draw box around bounds, and translate box to lower part of screen
+    // TODO translate box to lower part of screen
+    // TODO expand box to one more than actual bounds
+    commands.draw_box(
+        unscaled::Rect {
+            x: unscaled::X(0),
+            y: unscaled::Y(0),
+            w: unscaled::W(game::xy::X_MAX_INNER.into()),
+            h: unscaled::H(game::xy::Y_MAX_INNER.into()),
+        },
+        0
+    );
     let &Splat { x, y, .. } = &state.player;
     commands.draw_pixel(x.get(), y.get(), 6);
 }
