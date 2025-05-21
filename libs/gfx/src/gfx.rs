@@ -142,7 +142,8 @@ impl Commands {
             let mut x = left_x;
             let upper_bound = right_x;
 
-            while x < upper_bound {
+            // <= so we draw the final corner
+            while x <= upper_bound {
                 self.draw_pixel(x, bottom_y, colour);
                 x += unscaled::W(1);
             }

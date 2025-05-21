@@ -12,10 +12,10 @@ pub mod xy {
 
     /// Clamps to the valid range
     pub fn x(x: Inner) -> X {
-        X(if x > X_MAX_INNER { X_MAX_INNER } else { x })
+        X(if x > MAX_W_INNER { MAX_W_INNER } else { x })
     }
 
-    pub const X_MAX_INNER: Inner = 0x80;
+    pub const MAX_W_INNER: Inner = 0x80;
 
     impl X {
         pub const ONE: Self = Self(1);
@@ -28,8 +28,8 @@ pub mod xy {
     impl core::ops::AddAssign for X {
         fn add_assign(&mut self, other: Self) {
             self.0 = self.0.saturating_add(other.0);
-            if self.0 > X_MAX_INNER {
-                self.0 = X_MAX_INNER;
+            if self.0 > MAX_W_INNER {
+                self.0 = MAX_W_INNER;
             }
         }
     }
@@ -43,11 +43,11 @@ pub mod xy {
     #[derive(Clone, Copy, Default)]
     pub struct Y(Inner);
 
-    pub const Y_MAX_INNER: Inner = 0x40;
+    pub const MAX_H_INNER: Inner = 0x40;
 
     /// Clamps to the valid range
     pub fn y(y: Inner) -> Y {
-        Y(if y > Y_MAX_INNER { Y_MAX_INNER } else { y })
+        Y(if y > MAX_H_INNER { MAX_H_INNER } else { y })
     }
 
     impl Y {
@@ -61,8 +61,8 @@ pub mod xy {
     impl core::ops::AddAssign for Y {
         fn add_assign(&mut self, other: Self) {
             self.0 = self.0.saturating_add(other.0);
-            if self.0 > Y_MAX_INNER {
-                self.0 = Y_MAX_INNER;
+            if self.0 > MAX_H_INNER {
+                self.0 = MAX_H_INNER;
             }
         }
     }
@@ -99,8 +99,8 @@ impl State {
     pub fn new(seed: Seed) -> State {
         let mut rng = xs::from_seed(seed);
 
-        let x = xy::x(xs::range(&mut rng, 0..xy::X_MAX_INNER as u32) as xy::Inner);
-        let y = xy::y(xs::range(&mut rng, 0..xy::Y_MAX_INNER as u32) as xy::Inner);
+        let x = xy::x(xs::range(&mut rng, 0..xy::MAX_W_INNER as u32) as xy::Inner);
+        let y = xy::y(xs::range(&mut rng, 0..xy::MAX_H_INNER as u32) as xy::Inner);
 
         State {
             rng,

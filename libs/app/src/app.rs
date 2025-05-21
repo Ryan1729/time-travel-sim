@@ -1,5 +1,6 @@
 use game::Splat;
 use gfx::{Commands};
+#[allow(unused_imports)]
 use platform_types::{command, sprite, unscaled, Button, Input, Speaker, SFX};
 pub use platform_types::StateParams;
 
@@ -80,19 +81,24 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    // TODO translate box to lower part of screen
-    // TODO expand box to one more than actual bounds
+    let X_OFFSET: unscaled::W = unscaled::W((command::WIDTH - (game::xy::MAX_W_INNER as unscaled::Inner)) / 2);
+    let Y_OFFSET: unscaled::H = unscaled::H((command::HEIGHT - (game::xy::MAX_H_INNER as unscaled::Inner)) / 2);
+
     commands.draw_box(
         unscaled::Rect {
-            x: unscaled::X(0),
-            y: unscaled::Y(0),
-            w: unscaled::W(game::xy::X_MAX_INNER.into()),
-            h: unscaled::H(game::xy::Y_MAX_INNER.into()),
+            x: unscaled::X(0) + X_OFFSET - unscaled::W(1),
+            y: unscaled::Y(0) + Y_OFFSET - unscaled::H(1),
+            w: unscaled::W(game::xy::MAX_W_INNER.into()) + unscaled::W(2),
+            h: unscaled::H(game::xy::MAX_H_INNER.into()) + unscaled::H(2),
         },
         0
     );
     let &Splat { x, y, .. } = &state.player;
-    commands.draw_pixel(x.get(), y.get(), 6);
+    commands.draw_pixel(
+        x.get() + X_OFFSET,
+        y.get() + Y_OFFSET,
+        6
+    );
 }
 
 #[inline]
