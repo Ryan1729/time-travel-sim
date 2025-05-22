@@ -75,29 +75,37 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
     } else if input.pressed_this_frame(Button::RIGHT) {
         state.move_right();
     }
-//
-    //state.advance_time();
+
+    state.advance_time();
 }
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
-    let X_OFFSET: unscaled::W = unscaled::W((command::WIDTH - (game::xy::MAX_W_INNER as unscaled::Inner)) / 2);
-    let Y_OFFSET: unscaled::H = unscaled::H((command::HEIGHT - (game::xy::MAX_H_INNER as unscaled::Inner)) / 2);
+    const X_OFFSET: unscaled::W = unscaled::W((command::WIDTH - (game::xy::MAX_W_INNER as unscaled::Inner)) / 2);
+    const Y_OFFSET: unscaled::H = unscaled::H((command::HEIGHT - (game::xy::MAX_H_INNER as unscaled::Inner)) / 2);
 
-    commands.draw_box(
-        unscaled::Rect {
-            x: unscaled::X(0) + X_OFFSET - unscaled::W(1),
-            y: unscaled::Y(0) + Y_OFFSET - unscaled::H(1),
-            w: unscaled::W(game::xy::MAX_W_INNER.into()) + unscaled::W(2),
-            h: unscaled::H(game::xy::MAX_H_INNER.into()) + unscaled::H(2),
-        },
-        0
-    );
-    let &Splat { x, y, .. } = &state.player;
-    commands.draw_pixel(
-        x.get() + X_OFFSET,
-        y.get() + Y_OFFSET,
-        6
+    let box_rect = unscaled::Rect {
+        x: unscaled::X(0) + X_OFFSET - unscaled::W(1),
+        y: unscaled::Y(0) + Y_OFFSET - unscaled::H(1),
+        w: unscaled::W(game::xy::MAX_W_INNER.into()) + unscaled::W(2),
+        h: unscaled::H(game::xy::MAX_H_INNER.into()) + unscaled::H(2),
+    };
+
+    commands.draw_box(box_rect, 0);
+
+    for &Splat { x, y, .. } in state.current_splats() {
+        commands.draw_pixel(
+            x.get() + X_OFFSET,
+            y.get() + Y_OFFSET,
+            6
+        );
+    }
+
+    commands.print(
+        format!("{}", state.instant_index).as_bytes(),
+        box_rect.x,
+        box_rect.y - (gfx::CHAR_H + unscaled::H(2)),
+        6,
     );
 }
 
