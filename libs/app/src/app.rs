@@ -1,11 +1,11 @@
-use game::Splat;
+use game::{AdvanceOutcome, Splat};
 use gfx::{Commands};
 #[allow(unused_imports)]
 use platform_types::{command, sprite, unscaled, Button, Input, Speaker, SFX};
 pub use platform_types::StateParams;
 
 pub struct State {
-    pub game_state: game::State,
+    pub game_state: Box<game::State>,
     pub commands: Commands,
     pub input: Input,
     pub speaker: Speaker,
@@ -22,8 +22,7 @@ impl State {
         // not the macro.
         features::log(&format!("{:?}", seed));
 
-        let mut game_state = game::State::new(seed);
-        //game_state.add_splat();
+        let game_state = game::State::new(seed);
 
         Self {
             game_state,
@@ -66,6 +65,7 @@ impl platform_types::State for State {
 }
 
 fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
+    // TODO implment time manipulation
     if input.pressed_this_frame(Button::UP) {
         state.move_up();
     } else if input.pressed_this_frame(Button::DOWN) {
@@ -76,7 +76,7 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
         state.move_right();
     }
 
-    state.advance_time();
+    state.advance_time()
 }
 
 #[inline]
@@ -101,8 +101,28 @@ fn render(commands: &mut Commands, state: &game::State) {
         );
     }
 
+    match state.last_outcome {
+        AdvanceOutcome::Success => {}
+        AdvanceOutcome::OutOfInstants => {
+            commands.print(
+                b"64k instants ought to be enough for anybody!",
+                unscaled::X(0) + gfx::CHAR_W,
+                box_rect.y - (gfx::CHAR_H + unscaled::H(2)) * 2,
+                6,
+            );
+        },
+        AdvanceOutcome::OutOfSplats => {
+            commands.print(
+                b"256 selves ought to be enough for anybody!",
+                unscaled::X(0) + gfx::CHAR_W,
+                box_rect.y - (gfx::CHAR_H + unscaled::H(2)) * 2,
+                6,
+            );
+        },
+    }
+
     commands.print(
-        format!("{}", state.instant_index).as_bytes(),
+        format!("{}", state.current).as_bytes(),
         box_rect.x,
         box_rect.y - (gfx::CHAR_H + unscaled::H(2)),
         6,

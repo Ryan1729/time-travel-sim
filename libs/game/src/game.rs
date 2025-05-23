@@ -76,49 +76,83 @@ pub mod xy {
 pub use xy::{X, Y};
 
 
-#[derive(Clone, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Splat {
     pub x: X,
     pub y: Y,
 }
 
-#[derive(Clone, Default)]
+pub const SPLAT_COUNT: u16 = u8::MAX as u16 + 1;
+pub type SplatIndex = u8;
+
+#[derive(Clone)]
 struct Instant {
-    pub splats: Vec<Splat>,
+    pub splats: [Splat; SPLAT_COUNT as _],
+    pub one_past_last: SplatIndex,
 }
 
-#[derive(Clone, Default)]
+impl Default for Instant {
+    fn default() -> Self {
+        Self {
+            splats: [Splat::default(); SPLAT_COUNT as _],
+            one_past_last: 0,
+        }
+    }
+}
+
+pub const INSTANT_COUNT: u32 = u16::MAX as u32 + 1;
+pub type InstantIndex = u16;
+
+#[derive(Clone, Copy, Default)]
+pub enum AdvanceOutcome {
+    #[default]
+    Success,
+    OutOfInstants,
+    OutOfSplats,
+}
+
+#[derive(Clone)]
 pub struct State {
     pub rng: Xs,
-    // TODO change to
-    // pub instants: [Instant; INSTANT_COUNT as _],
-    // pub instant_index: InstantIndex,
-    pub instants: Vec<Instant>,
-    pub instant_index: usize,
+    pub instants: [Instant; INSTANT_COUNT as _],
+    pub current: InstantIndex,
     pub player: Splat,
+    pub last_outcome: AdvanceOutcome,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self {
+            rng: Xs::default(),
+            instants: core::array::from_fn(|_| Instant::default()),
+            current: 0,
+            player: Splat::default(),
+            last_outcome: <_>::default(),
+        }
+    }
 }
 
 impl State {
-    pub fn new(seed: Seed) -> State {
+    pub fn new(seed: Seed) -> Box<State> {
         let mut rng = xs::from_seed(seed);
 
         let x = xy::x(xs::range(&mut rng, 0..xy::MAX_W_INNER as u32) as xy::Inner);
         let y = xy::y(xs::range(&mut rng, 0..xy::MAX_H_INNER as u32) as xy::Inner);
 
-        State {
-            rng,
-            player: Splat {
-                x,
-                y,
-            },
-            .. <_>::default()
-        }
+        let mut output: Box<State> = <_>::default();
+
+        output.rng = rng;
+        output.player = Splat {
+            x,
+            y,
+        };
+
+        output
     }
 
     pub fn move_up(&mut self) {
         self.player.y -= Y::ONE;
     }
-
     pub fn move_down(&mut self) {
         self.player.y += Y::ONE;
     }
@@ -130,25 +164,35 @@ impl State {
     }
 
     pub fn advance_time(&mut self) {
-        self.instant_index += 1;
-
-        let new_splats: &mut Vec<Splat> =
-            if let Some(instant) = self.instants.get_mut(self.instant_index) {
-                &mut instant.splats
-            } else {
-                self.instants.push(Instant::default());
-                self.instant_index = self.instants.len() - 1;
-
-                &mut self.instants[self.instant_index].splats
-            };
-        new_splats.push(self.player.clone());
+        self.last_outcome = self.advance_time_inner();
     }
 
-    pub fn current_splats(&self) -> Box<dyn Iterator<Item = &Splat> + '_> {
-        if let Some(instant) = self.instants.get(self.instant_index) {
-            Box::new(instant.splats.iter().chain(std::iter::once(&self.player)))
-        } else {
-            Box::new(std::iter::empty())
+    fn advance_time_inner(&mut self) -> AdvanceOutcome {
+        // If we are at the last index already
+        if u32::from(self.current) == (INSTANT_COUNT - 1) {
+            return AdvanceOutcome::OutOfInstants
         }
+        let new_splats: &mut [Splat; SPLAT_COUNT as _] = &mut self.instants[self.current as usize].splats;
+        let one_past_last = &mut self.instants[self.current as usize].one_past_last;
+
+        // If we are at the last index already
+        if u16::from(*one_past_last) == SPLAT_COUNT - 1 {
+            return AdvanceOutcome::OutOfSplats
+        }
+        new_splats[*one_past_last as usize] = self.player.clone();
+
+        *one_past_last += 1;
+
+        self.current += 1;
+
+        AdvanceOutcome::Success
+    }
+
+    pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
+        let instant: &Instant = &self.instants[self.current as usize];
+
+        instant.splats[0..instant.one_past_last as usize]
+            .iter()
+            .chain(std::iter::once(&self.player))
     }
 }
