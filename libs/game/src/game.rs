@@ -86,7 +86,7 @@ pub const SPLAT_COUNT: u16 = u8::MAX as u16 + 1;
 pub type SplatIndex = u8;
 
 #[derive(Clone)]
-struct Instant {
+pub struct Instant {
     pub splats: [Splat; SPLAT_COUNT as _],
     pub one_past_last: SplatIndex,
 }
@@ -111,6 +111,37 @@ pub enum AdvanceOutcome {
     OutOfSplats,
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct TimeInput {
+    current: InstantIndex,
+    initial: InstantIndex,
+}
+
+impl TimeInput {
+    pub fn saturating_add(&mut self, to_add: InstantIndex) {
+        self.current = self.current.saturating_add(to_add);
+    }
+
+    pub fn saturating_sub(&mut self, to_sub: InstantIndex) {
+        self.current = self.current.saturating_sub(to_sub);
+    }
+
+    pub fn reset(&mut self) {
+        self.current = self.initial;
+    }
+
+    pub fn get_value(&self) -> InstantIndex {
+        self.current
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum TimeMode {
+    #[default]
+    Flowing,
+    Manipulating(TimeInput),
+}
+
 #[derive(Clone)]
 pub struct State {
     pub rng: Xs,
@@ -118,6 +149,7 @@ pub struct State {
     pub current: InstantIndex,
     pub player: Splat,
     pub last_outcome: AdvanceOutcome,
+    pub time_mode: TimeMode,
 }
 
 impl Default for State {
@@ -128,6 +160,7 @@ impl Default for State {
             current: 0,
             player: Splat::default(),
             last_outcome: <_>::default(),
+            time_mode: <_>::default(),
         }
     }
 }
@@ -149,7 +182,8 @@ impl State {
 
         output
     }
-
+    // TODO implememt collision detection
+    // TODO? Make collision detection optional?
     pub fn move_up(&mut self) {
         self.player.y -= Y::ONE;
     }
@@ -189,10 +223,23 @@ impl State {
     }
 
     pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
-        let instant: &Instant = &self.instants[self.current as usize];
+        use TimeMode::*;
+        let current = match self.time_mode {
+            Flowing => self.current,
+            Manipulating(ref time_input) => time_input.get_value(),
+        };
+
+        let instant: &Instant = &self.instants[current as usize];
 
         instant.splats[0..instant.one_past_last as usize]
             .iter()
             .chain(std::iter::once(&self.player))
+    }
+
+    pub fn fresh_time_input(&self) -> TimeInput {
+        TimeInput {
+            current: self.current,
+            initial: self.current,
+        }
     }
 }

@@ -65,31 +65,65 @@ impl platform_types::State for State {
 }
 
 fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
-    // TODO implment time manipulation
-    if input.pressed_this_frame(Button::UP) {
-        state.move_up();
-    } else if input.pressed_this_frame(Button::DOWN) {
-        state.move_down();
-    } else if input.pressed_this_frame(Button::LEFT) {
-        state.move_left();
-    } else if input.pressed_this_frame(Button::RIGHT) {
-        state.move_right();
-    }
+    use game::TimeMode::*;
+    match &mut state.time_mode {
+        // TODO? Main menu?
+        Flowing => {
+            if input.pressed_this_frame(Button::START) {
+                state.time_mode = Manipulating(state.fresh_time_input());
+            } else {
+                if input.pressed_this_frame(Button::UP) {
+                    state.move_up();
+                } else if input.pressed_this_frame(Button::DOWN) {
+                    state.move_down();
+                } else if input.pressed_this_frame(Button::LEFT) {
+                    state.move_left();
+                } else if input.pressed_this_frame(Button::RIGHT) {
+                    state.move_right();
+                }
 
-    state.advance_time()
+                state.advance_time();
+            }
+        },
+        Manipulating(ref mut time_input) => {
+            if input.pressed_this_frame(Button::START) {
+                state.current = time_input.get_value();
+                state.time_mode = Flowing
+            } else if input.pressed_this_frame(Button::UP) {
+                time_input.saturating_add(10);
+            } else if input.pressed_this_frame(Button::DOWN) {
+                time_input.saturating_sub(10);
+            } else if input.pressed_this_frame(Button::LEFT) {
+                time_input.saturating_sub(1);
+            } else if input.pressed_this_frame(Button::RIGHT) {
+                time_input.saturating_add(1);
+            } else if input.pressed_this_frame(Button::A) {
+                time_input.saturating_add(100);
+            } else if input.pressed_this_frame(Button::B) {
+                time_input.saturating_sub(100);
+            } else if input.pressed_this_frame(Button::SELECT) {
+                time_input.reset();
+            }
+        }
+    }
 }
 
 #[inline]
 fn render(commands: &mut Commands, state: &game::State) {
+    use game::TimeMode::*;
     const X_OFFSET: unscaled::W = unscaled::W((command::WIDTH - (game::xy::MAX_W_INNER as unscaled::Inner)) / 2);
     const Y_OFFSET: unscaled::H = unscaled::H((command::HEIGHT - (game::xy::MAX_H_INNER as unscaled::Inner)) / 2);
 
+    // TODO? Bother making these const?
     let box_rect = unscaled::Rect {
         x: unscaled::X(0) + X_OFFSET - unscaled::W(1),
         y: unscaled::Y(0) + Y_OFFSET - unscaled::H(1),
         w: unscaled::W(game::xy::MAX_W_INNER.into()) + unscaled::W(2),
         h: unscaled::H(game::xy::MAX_H_INNER.into()) + unscaled::H(2),
     };
+    let time_y = box_rect.y - (gfx::CHAR_H + unscaled::H(2));
+    let manipulated_time_y = time_y - (gfx::CHAR_H + unscaled::H(2));
+    let error_y = manipulated_time_y - (gfx::CHAR_H + unscaled::H(2));
 
     commands.draw_box(box_rect, 0);
 
@@ -107,7 +141,7 @@ fn render(commands: &mut Commands, state: &game::State) {
             commands.print(
                 b"64k instants ought to be enough for anybody!",
                 unscaled::X(0) + gfx::CHAR_W,
-                box_rect.y - (gfx::CHAR_H + unscaled::H(2)) * 2,
+                error_y,
                 6,
             );
         },
@@ -115,8 +149,20 @@ fn render(commands: &mut Commands, state: &game::State) {
             commands.print(
                 b"256 selves ought to be enough for anybody!",
                 unscaled::X(0) + gfx::CHAR_W,
-                box_rect.y - (gfx::CHAR_H + unscaled::H(2)) * 2,
+                error_y,
                 6,
+            );
+        },
+    }
+
+    match state.time_mode {
+        Flowing => {},
+        Manipulating(ref time_input) => {
+            commands.print(
+                format!("{}", time_input.get_value()).as_bytes(),
+                box_rect.x,
+                manipulated_time_y,
+                2,
             );
         },
     }
@@ -124,7 +170,7 @@ fn render(commands: &mut Commands, state: &game::State) {
     commands.print(
         format!("{}", state.current).as_bytes(),
         box_rect.x,
-        box_rect.y - (gfx::CHAR_H + unscaled::H(2)),
+        time_y,
         6,
     );
 }
