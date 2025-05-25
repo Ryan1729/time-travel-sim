@@ -137,7 +137,9 @@ impl TimeInput {
 
 #[derive(Clone, Copy, Default)]
 pub enum TimeMode {
+    // TODO? a dev feature to skip the main menu? Maybe just a cli arg
     #[default]
+    MainMenu,
     Flowing,
     Manipulating(TimeInput),
 }
@@ -225,7 +227,8 @@ impl State {
     pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
         use TimeMode::*;
         let current = match self.time_mode {
-            Flowing => self.current,
+            // TODO? Make a separate enum for MainMenu vs not, so we don't need to care about that here?
+            MainMenu | Flowing => self.current,
             Manipulating(ref time_input) => time_input.get_value(),
         };
 

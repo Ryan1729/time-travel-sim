@@ -67,7 +67,11 @@ impl platform_types::State for State {
 fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
     use game::TimeMode::*;
     match &mut state.time_mode {
-        // TODO? Main menu?
+        MainMenu => {
+            if input.pressed_this_frame(Button::START) {
+                state.time_mode = Flowing;
+            }
+        },
         Flowing => {
             if input.pressed_this_frame(Button::START) {
                 state.time_mode = Manipulating(state.fresh_time_input());
@@ -121,43 +125,96 @@ fn render(commands: &mut Commands, state: &game::State) {
         w: unscaled::W(game::xy::MAX_W_INNER.into()) + unscaled::W(2),
         h: unscaled::H(game::xy::MAX_H_INNER.into()) + unscaled::H(2),
     };
-    let time_y = box_rect.y - (gfx::CHAR_H + unscaled::H(2));
-    let manipulated_time_y = time_y - (gfx::CHAR_H + unscaled::H(2));
-    let error_y = manipulated_time_y - (gfx::CHAR_H + unscaled::H(2));
+    let text_y_advance = gfx::CHAR_H + unscaled::H(2);
+    let time_y = box_rect.y - text_y_advance;
+    let manipulated_time_y = time_y - text_y_advance;
+    let error_y = manipulated_time_y - text_y_advance;
 
-    commands.draw_box(box_rect, 0);
 
-    for &Splat { x, y, .. } in state.current_splats() {
-        commands.draw_pixel(
-            x.get() + X_OFFSET,
-            y.get() + Y_OFFSET,
-            6
-        );
-    }
 
-    match state.last_outcome {
-        AdvanceOutcome::Success => {}
-        AdvanceOutcome::OutOfInstants => {
+    macro_rules! render_game {
+        () => {
+            commands.draw_box(box_rect, 0);
+
+            for &Splat { x, y, .. } in state.current_splats() {
+                commands.draw_pixel(
+                    x.get() + X_OFFSET,
+                    y.get() + Y_OFFSET,
+                    6
+                );
+            }
+
+            match state.last_outcome {
+                AdvanceOutcome::Success => {}
+                AdvanceOutcome::OutOfInstants => {
+                    commands.print(
+                        b"64k instants ought to be enough for anybody!",
+                        unscaled::X(0) + gfx::CHAR_W,
+                        error_y,
+                        6,
+                    );
+                },
+                AdvanceOutcome::OutOfSplats => {
+                    commands.print(
+                        b"256 selves ought to be enough for anybody!",
+                        unscaled::X(0) + gfx::CHAR_W,
+                        error_y,
+                        6,
+                    );
+                },
+            }
+
             commands.print(
-                b"64k instants ought to be enough for anybody!",
-                unscaled::X(0) + gfx::CHAR_W,
-                error_y,
+                format!("{}", state.current).as_bytes(),
+                box_rect.x,
+                time_y,
                 6,
             );
-        },
-        AdvanceOutcome::OutOfSplats => {
-            commands.print(
-                b"256 selves ought to be enough for anybody!",
-                unscaled::X(0) + gfx::CHAR_W,
-                error_y,
-                6,
-            );
-        },
+        }
     }
 
     match state.time_mode {
-        Flowing => {},
+        MainMenu => {
+            let mut y = unscaled::Y(0);
+
+            macro_rules! p {
+                ($s: expr) => {
+                    commands.print(
+                        format!("{}", $s).as_bytes(),
+                        unscaled::X(0),
+                        y,
+                        6,
+                    );
+                    y += text_y_advance;
+                }
+            }
+
+            //  This line is just wide enough to fit on the screen
+            //  ============================================================
+            //  123456789112345678921234567893123456789412345678951234567896
+            //           10        20        30        40        50        60
+
+            p!("");
+            p!("main mode controls");
+            p!("up/down/left/right           -                   move around");
+            p!("enter                        -  enter time manipulation mode");
+            p!("");
+            p!("time manipulation mode controls");
+            p!("left/right                   -  subtract/add 1 time unit");
+            p!("down/up                      -  subtract/add 10 time units");
+            p!("x/z                          -  subtract/add 100 time units");
+            p!("right shift                  -  reset to current time");
+            p!("enter                        -  submit and back to main mode");
+            p!("");
+            p!("                    press enter to start                    ");
+
+        },
+        Flowing => {
+            render_game!();
+        },
         Manipulating(ref time_input) => {
+            render_game!();
+
             commands.print(
                 format!("{}", time_input.get_value()).as_bytes(),
                 box_rect.x,
@@ -166,13 +223,6 @@ fn render(commands: &mut Commands, state: &game::State) {
             );
         },
     }
-
-    commands.print(
-        format!("{}", state.current).as_bytes(),
-        box_rect.x,
-        time_y,
-        6,
-    );
 }
 
 #[inline]
