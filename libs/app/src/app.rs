@@ -92,7 +92,14 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
         Manipulating(ref mut time_input) => {
             if input.pressed_this_frame(Button::START) {
                 state.current = time_input.get_value();
-                state.time_mode = Flowing
+                match state.check_collision() {
+                    Ok(()) => {
+                        state.time_mode = Flowing;
+                    },
+                    Err(e) => {
+                        state.time_mode = Collision(e);
+                    },
+                }
             } else if input.pressed_this_frame(Button::UP) {
                 time_input.saturating_add(10);
             } else if input.pressed_this_frame(Button::DOWN) {
@@ -109,6 +116,7 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
                 time_input.reset();
             }
         }
+        Collision(_) => {}
     }
 }
 
@@ -129,6 +137,7 @@ fn render(commands: &mut Commands, state: &game::State) {
     let time_y = box_rect.y - text_y_advance;
     let manipulated_time_y = time_y - text_y_advance;
     let error_y = manipulated_time_y - text_y_advance;
+    let paradox_error_y = error_y - text_y_advance;
 
 
 
@@ -219,6 +228,16 @@ fn render(commands: &mut Commands, state: &game::State) {
                 format!("{}", time_input.get_value()).as_bytes(),
                 box_rect.x,
                 manipulated_time_y,
+                2,
+            );
+        },
+        Collision(_e) => {
+            render_game!();
+
+            commands.print(
+                b"collision paradox detected!",
+                unscaled::X(0),
+                paradox_error_y,
                 2,
             );
         },

@@ -136,12 +136,19 @@ impl TimeInput {
 }
 
 #[derive(Clone, Copy, Default)]
+#[must_use]
+pub struct CollisionError {
+    // TODO? The location where the collision happened?
+}
+
+#[derive(Clone, Copy, Default)]
 pub enum TimeMode {
     // TODO? a dev feature to skip the main menu? Maybe just a cli arg
     #[default]
     MainMenu,
     Flowing,
     Manipulating(TimeInput),
+    Collision(CollisionError)
 }
 
 #[derive(Clone)]
@@ -184,8 +191,7 @@ impl State {
 
         output
     }
-    // TODO implememt collision detection
-    // TODO? Make collision detection optional?
+
     pub fn move_up(&mut self) {
         self.player.y -= Y::ONE;
     }
@@ -224,17 +230,35 @@ impl State {
         AdvanceOutcome::Success
     }
 
-    pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
+    // TODO? Make collision detection optional?
+    pub fn check_collision(&self) -> Result<(), CollisionError> {
+        for splat in self.current_non_player_splats() {
+            if self.player.x.get() == splat.x.get()
+            && self.player.y.get() == splat.y.get() {
+                return Err(CollisionError{})
+            }
+        }
+
+        Ok(())
+    }
+
+    fn current_non_player_splats(&self) -> &[Splat] {
         use TimeMode::*;
         let current = match self.time_mode {
-            // TODO? Make a separate enum for MainMenu vs not, so we don't need to care about that here?
-            MainMenu | Flowing => self.current,
+            MainMenu | Collision(_) => {
+                return &[]
+            },
+            Flowing => self.current,
             Manipulating(ref time_input) => time_input.get_value(),
         };
 
         let instant: &Instant = &self.instants[current as usize];
 
-        instant.splats[0..instant.one_past_last as usize]
+        &instant.splats[0..instant.one_past_last as usize]
+    }
+
+    pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
+        self.current_non_player_splats()
             .iter()
             .chain(std::iter::once(&self.player))
     }
