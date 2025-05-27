@@ -1,5 +1,5 @@
 use models::{Card, gen_card};
-use platform_types::{command, unscaled};
+use platform_types::{command, unscaled, PaletteIndex};
 use xs::{Xs, Seed};
 
 pub mod xy {
@@ -75,11 +75,17 @@ pub mod xy {
 }
 pub use xy::{X, Y};
 
+#[derive(Clone, Copy, Default)]
+pub struct Player {
+    pub x: X,
+    pub y: Y,
+}
 
 #[derive(Clone, Copy, Default)]
 pub struct Splat {
     pub x: X,
     pub y: Y,
+    pub colour: PaletteIndex,
 }
 
 pub const SPLAT_COUNT: u16 = u8::MAX as u16 + 1;
@@ -156,7 +162,7 @@ pub struct State {
     pub rng: Xs,
     pub instants: [Instant; INSTANT_COUNT as _],
     pub current: InstantIndex,
-    pub player: Splat,
+    pub player: Player,
     pub last_outcome: AdvanceOutcome,
     pub time_mode: TimeMode,
 }
@@ -167,7 +173,7 @@ impl Default for State {
             rng: Xs::default(),
             instants: core::array::from_fn(|_| Instant::default()),
             current: 0,
-            player: Splat::default(),
+            player: <_>::default(),
             last_outcome: <_>::default(),
             time_mode: <_>::default(),
         }
@@ -184,7 +190,7 @@ impl State {
         let mut output: Box<State> = <_>::default();
 
         output.rng = rng;
-        output.player = Splat {
+        output.player = Player {
             x,
             y,
         };
@@ -221,7 +227,11 @@ impl State {
         if u16::from(*one_past_last) == SPLAT_COUNT - 1 {
             return AdvanceOutcome::OutOfSplats
         }
-        new_splats[*one_past_last as usize] = self.player.clone();
+        new_splats[*one_past_last as usize] = Splat {
+            x: self.player.x,
+            y: self.player.y,
+            colour: 6,
+        };
 
         *one_past_last += 1;
 
@@ -257,10 +267,21 @@ impl State {
         &instant.splats[0..instant.one_past_last as usize]
     }
 
-    pub fn current_splats(&self) -> impl Iterator<Item = &Splat> {
-        self.current_non_player_splats()
-            .iter()
-            .chain(std::iter::once(&self.player))
+    pub fn current_splats(&self) -> (&[Splat], Splat) {
+        use TimeMode::*;
+        (
+            self.current_non_player_splats(),
+            Splat {
+                x: self.player.x,
+                y: self.player.y,
+                colour: match (self.check_collision(), self.time_mode) {
+                    (Err(_), _) => 2,
+                    (Ok(()), MainMenu | Collision(_)) => 0,
+                    (Ok(()), Flowing) => 6,
+                    (Ok(()), Manipulating(_)) => 1,
+                },
+            }
+        )
     }
 
     pub fn fresh_time_input(&self) -> TimeInput {

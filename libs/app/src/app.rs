@@ -116,7 +116,9 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
                 time_input.reset();
             }
         }
-        Collision(_) => {}
+        Collision(_) => {
+            // TODO? allow backing out of the paradox?
+        }
     }
 }
 
@@ -145,13 +147,24 @@ fn render(commands: &mut Commands, state: &game::State) {
         () => {
             commands.draw_box(box_rect, 0);
 
-            for &Splat { x, y, .. } in state.current_splats() {
+            let (splats, player_splat) = state.current_splats();
+            for &Splat { x, y, colour, .. } in splats {
                 commands.draw_pixel(
                     x.get() + X_OFFSET,
                     y.get() + Y_OFFSET,
-                    6
+                    colour
                 );
             }
+            {
+                let Splat { x, y, colour, .. } = player_splat;
+
+                commands.draw_pixel(
+                    x.get() + X_OFFSET,
+                    y.get() + Y_OFFSET,
+                    colour
+                );
+            }
+
 
             match state.last_outcome {
                 AdvanceOutcome::Success => {}
