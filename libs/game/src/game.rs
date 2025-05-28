@@ -212,7 +212,14 @@ impl State {
     }
 
     pub fn advance_time(&mut self) {
-        self.last_outcome = self.advance_time_inner();
+        self.check_collision();
+
+        match self.time_mode {
+            TimeMode::Flowing => {
+                self.last_outcome = self.advance_time_inner();
+            }
+            _ => {}
+        }
     }
 
     fn advance_time_inner(&mut self) -> AdvanceOutcome {
@@ -241,7 +248,20 @@ impl State {
     }
 
     // TODO? Make collision detection optional?
-    pub fn check_collision(&self) -> Result<(), CollisionError> {
+    pub fn check_collision(&mut self) {
+        use TimeMode::*;
+
+        match self.get_collision_info() {
+            Ok(()) => {
+                self.time_mode = Flowing;
+            },
+            Err(e) => {
+                self.time_mode = Collision(e);
+            },
+        }
+    }
+
+    fn get_collision_info(&self) -> Result<(), CollisionError> {
         for splat in self.current_non_player_splats() {
             if self.player.x.get() == splat.x.get()
             && self.player.y.get() == splat.y.get() {
@@ -255,10 +275,10 @@ impl State {
     fn current_non_player_splats(&self) -> &[Splat] {
         use TimeMode::*;
         let current = match self.time_mode {
-            MainMenu | Collision(_) => {
+            MainMenu => {
                 return &[]
             },
-            Flowing => self.current,
+            Flowing | Collision(_) => self.current,
             Manipulating(ref time_input) => time_input.get_value(),
         };
 
@@ -274,7 +294,7 @@ impl State {
             Splat {
                 x: self.player.x,
                 y: self.player.y,
-                colour: match (self.check_collision(), self.time_mode) {
+                colour: match (self.get_collision_info(), self.time_mode) {
                     (Err(_), _) => 2,
                     (Ok(()), MainMenu | Collision(_)) => 0,
                     (Ok(()), Flowing) => 6,

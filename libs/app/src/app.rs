@@ -92,14 +92,7 @@ fn update(state: &mut game::State, input: Input, speaker: &mut Speaker) {
         Manipulating(ref mut time_input) => {
             if input.pressed_this_frame(Button::START) {
                 state.current = time_input.get_value();
-                match state.check_collision() {
-                    Ok(()) => {
-                        state.time_mode = Flowing;
-                    },
-                    Err(e) => {
-                        state.time_mode = Collision(e);
-                    },
-                }
+                state.check_collision();
             } else if input.pressed_this_frame(Button::UP) {
                 time_input.saturating_add(10);
             } else if input.pressed_this_frame(Button::DOWN) {
